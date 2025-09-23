@@ -13,7 +13,7 @@ terraform {
   backend "s3" {
      bucket = "rdof-terraform-state"
      region = "us-east-1"
-     key     = "terraform/${terraform.workspace}/terraform.tfstate"
+     key     = "terraform/terraform.tfstate"
      encrypt = true
    }
 }
