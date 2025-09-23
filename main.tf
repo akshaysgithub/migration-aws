@@ -9,13 +9,13 @@ terraform {
     }
   }
 
-  # # Backend configuration for remote state
-  # backend "s3" {
-  #   # These values will be set via backend config or environment variables
-  #   # bucket = "your-terraform-state-bucket"
-  #   # key    = "terraform.tfstate"
-  #   # region = "us-east-1"
-  # }
+  # Backend configuration for remote state
+  backend "s3" {
+     bucket = "rdof-terraform-state"
+     region = "us-east-1"
+     key     = "terraform/${terraform.workspace}/terraform.tfstate"
+     encrypt = true
+   }
 }
 
 # Local values for environment-specific configurations
