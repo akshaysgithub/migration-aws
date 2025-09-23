@@ -19,12 +19,15 @@ terraform apply
 
 # Step 2: STAGING account (creates staging role)
 ```bash
+$env:AWS_ACCESS_KEY_ID = "your-prod-account-admin-key"
+$env:AWS_SECRET_ACCESS_KEY = "your-prod-account-admin-secret"
+For Linux
 export AWS_ACCESS_KEY_ID=your-staging-account-admin-key
 export AWS_SECRET_ACCESS_KEY=your-staging-account-admin-secret
 
-terraform workspace select staging || terraform workspace new staging
-terraform init -backend-config="key=terraform/staging/terraform.tfstate"
-terraform apply
+.\terraform workspace select staging || terraform workspace new staging
+.\terraform init -backend-config="key=terraform/staging/terraform.tfstate"
+.\terraform apply
 ```
 
 # Step 3: DEV account (creates dev role)

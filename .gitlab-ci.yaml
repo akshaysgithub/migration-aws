@@ -17,12 +17,12 @@ cache:
 before_script:
   - cd ${TF_ROOT}
   - terraform --version
-  - terraform init
 
 # Validation stage
 validate:
   stage: validate
   script:
+    - terraform init -backend-config="key=terraform/dev/terraform.tfstate"
     - terraform fmt -check
     - terraform validate
   only:
@@ -33,6 +33,7 @@ validate:
 plan:dev:
   stage: plan
   script:
+    - terraform init -backend-config="key=terraform/dev/terraform.tfstate"
     - terraform workspace select dev || terraform workspace new dev
     - terraform plan -out=dev.tfplan -var-file=terraform.tfvars
   artifacts:
@@ -47,6 +48,7 @@ plan:dev:
 plan:staging:
   stage: plan
   script:
+    - terraform init -backend-config="key=terraform/staging/terraform.tfstate"
     - terraform workspace select staging || terraform workspace new staging
     - terraform plan -out=staging.tfplan -var-file=terraform.tfvars
   artifacts:
@@ -61,6 +63,7 @@ plan:staging:
 plan:prod:
   stage: plan
   script:
+    - terraform init -backend-config="key=terraform/prod/terraform.tfstate"
     - terraform workspace select prod || terraform workspace new prod
     - terraform plan -out=prod.tfplan -var-file=terraform.tfvars
   artifacts:

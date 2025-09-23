@@ -11,7 +11,7 @@ terraform {
 
   # Backend configuration for remote state
   backend "s3" {
-     bucket = "rdof-terraform-state"
+     bucket = "rdof-terraform-state-prod"
      region = "us-east-1"
      key     = "terraform/terraform.tfstate"
      encrypt = true
