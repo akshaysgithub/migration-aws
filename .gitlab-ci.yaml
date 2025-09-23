@@ -1,49 +1,110 @@
 stages:
+  - validate
   - plan
   - apply
 
 variables:
-  AWS_REGION: "us-east-1"
+  TF_ROOT: ${CI_PROJECT_DIR}
+  TF_ADDRESS: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state
+  TF_IN_AUTOMATION: "true"
 
-plan_dev:
+# Cache Terraform plugins
+cache:
+  key: "${TF_ROOT}"
+  paths:
+    - ${TF_ROOT}/.terraform
+
+before_script:
+  - cd ${TF_ROOT}
+  - terraform --version
+  - terraform init
+
+# Validation stage
+validate:
+  stage: validate
+  script:
+    - terraform fmt -check
+    - terraform validate
+  only:
+    - merge_requests
+    - main
+
+# Plan for Development
+plan:dev:
   stage: plan
   script:
-    - terraform init
     - terraform workspace select dev || terraform workspace new dev
-    - terraform plan -out=tfplan-dev
+    - terraform plan -out=dev.tfplan -var-file=terraform.tfvars
+  artifacts:
+    paths:
+      - ${TF_ROOT}/dev.tfplan
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
 
-# Apply for dev environment
-apply_dev:
-  stage: apply
-  script:
-    - terraform init
-    - terraform workspace select dev
-    - terraform apply -auto-approve tfplan-dev
-
-plan_staging:
+# Plan for Staging
+plan:staging:
   stage: plan
   script:
-    - terraform init
     - terraform workspace select staging || terraform workspace new staging
-    - terraform plan -out=tfplan-staging
+    - terraform plan -out=staging.tfplan -var-file=terraform.tfvars
+  artifacts:
+    paths:
+      - ${TF_ROOT}/staging.tfplan
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
 
-apply_staging:
-  stage: apply
-  script:
-    - terraform init
-    - terraform workspace select staging
-    - terraform apply -auto-approve tfplan-staging
-
-plan_prod:
+# Plan for Production
+plan:prod:
   stage: plan
   script:
-    - terraform init
     - terraform workspace select prod || terraform workspace new prod
-    - terraform plan -out=tfplan-prod
+    - terraform plan -out=prod.tfplan -var-file=terraform.tfvars
+  artifacts:
+    paths:
+      - ${TF_ROOT}/prod.tfplan
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
 
-apply_prod:
+# Apply to Development (automatic on main branch)
+apply:dev:
   stage: apply
   script:
-    - terraform init
+    - terraform workspace select dev
+    - terraform apply -auto-approve dev.tfplan
+  dependencies:
+    - plan:dev
+  only:
+    - main
+  when: manual
+
+# Apply to Staging (manual approval required)
+apply:staging:
+  stage: apply
+  script:
+    - terraform workspace select staging
+    - terraform apply -auto-approve staging.tfplan
+  dependencies:
+    - plan:staging
+  only:
+    - main
+  when: manual
+
+# Apply to Production (manual approval required)
+apply:prod:
+  stage: apply
+  script:
     - terraform workspace select prod
-    - terraform apply -auto-approve tfplan-prod
+    - terraform apply -auto-approve prod.tfplan
+  dependencies:
+    - plan:prod
+  only:
+    - main
+  when: manual
+  environment:
+    name: production
