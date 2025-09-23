@@ -1,0 +1,49 @@
+stages:
+  - plan
+  - apply
+
+variables:
+  AWS_REGION: "us-east-1"
+
+plan_dev:
+  stage: plan
+  script:
+    - terraform init
+    - terraform workspace select dev || terraform workspace new dev
+    - terraform plan -out=tfplan-dev
+
+# Apply for dev environment
+apply_dev:
+  stage: apply
+  script:
+    - terraform init
+    - terraform workspace select dev
+    - terraform apply -auto-approve tfplan-dev
+
+plan_staging:
+  stage: plan
+  script:
+    - terraform init
+    - terraform workspace select staging || terraform workspace new staging
+    - terraform plan -out=tfplan-staging
+
+apply_staging:
+  stage: apply
+  script:
+    - terraform init
+    - terraform workspace select staging
+    - terraform apply -auto-approve tfplan-staging
+
+plan_prod:
+  stage: plan
+  script:
+    - terraform init
+    - terraform workspace select prod || terraform workspace new prod
+    - terraform plan -out=tfplan-prod
+
+apply_prod:
+  stage: apply
+  script:
+    - terraform init
+    - terraform workspace select prod
+    - terraform apply -auto-approve tfplan-prod
