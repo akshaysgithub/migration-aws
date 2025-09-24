@@ -11,7 +11,7 @@ You need to initialize the backend separately for each workspace to store state 
 ```bash
 export AWS_ACCESS_KEY_ID=your-prod-account-admin-key
 export AWS_SECRET_ACCESS_KEY=your-prod-account-admin-secret
-.\terraform init -reconfigure -backend-config="key=terraform/prod/terraform.tfstate"
+.\terraform init
 .\terraform workspace select prod 
 .\terrform plan
 .\terraform apply
@@ -25,7 +25,7 @@ For Linux
 export AWS_ACCESS_KEY_ID=your-staging-account-admin-key
 export AWS_SECRET_ACCESS_KEY=your-staging-account-admin-secret
 
-.\terraform init -reconfigure -backend-config="key=terraform/staging/terraform.tfstate"
+.\terraform init
 .\terraform workspace select prod 
 .\terrform plan
 .\terraform apply
@@ -36,7 +36,7 @@ export AWS_SECRET_ACCESS_KEY=your-staging-account-admin-secret
 export AWS_ACCESS_KEY_ID=your-dev-account-admin-key  
 export AWS_SECRET_ACCESS_KEY=your-dev-account-admin-secret
 
-.\terraform init -reconfigure -backend-config="key=terraform/dev/terraform.tfstate"
+.\terraform init
 .\terraform workspace select prod 
 .\terrform plan
 .\terraform apply
@@ -57,4 +57,17 @@ export AWS_SECRET_ACCESS_KEY=<prod-service-account-secret>
 terraform workspace select prod && terraform plan     # Prod SA → Prod role
 terraform workspace select staging && terraform plan  # Prod SA → Staging role  
 terraform workspace select dev && terraform plan      # Prod SA → Dev role
+```
+
+# To clear changes
+
+```bash
+# Clear environment variables
+unset AWS_ACCESS_KEY_ID
+unset AWS_SECRET_ACCESS_KEY
+unset AWS_SESSION_TOKEN
+unset AWS_PROFILE
+
+# Clear any cached credentials
+rm -rf ~/.aws/cli/cache/
 ```

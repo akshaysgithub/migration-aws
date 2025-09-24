@@ -53,13 +53,13 @@ variable "bucket_names" {
   type = map(list(string))
   default = {
     prod = [
-      "prod-bucket-names-abcdddd",
+      "prod-bucket-names-test123",
     ]
     staging = [
-      "staging-bucket-names-abcdddd",
+      "staging-bucket-names-fgfgfg",
     ]
     dev = [
-      "dev-bucket-name-abcdddd"
+      "dev-bucket-name-fgfgfg"
     ]
   }
 }

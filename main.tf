@@ -11,7 +11,7 @@ terraform {
 
   # Backend configuration for remote state
   backend "s3" {
-    bucket = "rdof-terraform-state-prod"
+    bucket = "terraform-terrantech-bucket"
     key    = "terraform/terraform.tfstate"
     region = "us-east-1"
     encrypt = true
@@ -120,48 +120,6 @@ resource "aws_s3_bucket_public_access_block" "app_buckets" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
-
-# Cross-account bucket policies (only for prod workspace)
-resource "aws_s3_bucket_policy" "cross_account_access" {
-  for_each = terraform.workspace == "prod" ? toset(local.current_buckets) : toset([])
-  bucket   = aws_s3_bucket.app_buckets[each.key].id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "CrossAccountAccess"
-        Effect = "Allow"
-        Principal = {
-          AWS = [
-            # Allow entire staging and dev accounts access
-            "arn:aws:iam::${var.staging_account_id}:root",
-            "arn:aws:iam::${var.dev_account_id}:root",
-            # Also allow the specific cross-account roles
-            "arn:aws:iam::${var.staging_account_id}:role/terraform/TerraformCrossAccountRole",
-            "arn:aws:iam::${var.dev_account_id}:role/terraform/TerraformCrossAccountRole"
-          ]
-        }
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:GetBucketLocation",
-          "s3:GetBucketVersioning",
-          "s3:PutBucketVersioning",
-          "s3:GetBucketAcl",
-          "s3:PutBucketAcl"
-        ]
-        Resource = [
-          aws_s3_bucket.app_buckets[each.key].arn,
-          "${aws_s3_bucket.app_buckets[each.key].arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
 # Terraform state backend bucket policy (only in prod workspace)
 resource "aws_s3_bucket_policy" "terraform_state_backend_cross_account" {
   count  = terraform.workspace == "prod" ? 1 : 0
@@ -175,89 +133,25 @@ resource "aws_s3_bucket_policy" "terraform_state_backend_cross_account" {
         Effect = "Allow"
         Principal = {
           AWS = [
-            # Allow staging and dev accounts full access to state bucket
+            # Allow staging account full access to state bucket
             "arn:aws:iam::${var.staging_account_id}:root",
-            "arn:aws:iam::${var.dev_account_id}:root",
-            # Allow specific cross-account roles
-            "arn:aws:iam::${var.staging_account_id}:role/terraform/TerraformCrossAccountRole",
-            "arn:aws:iam::${var.dev_account_id}:role/terraform/TerraformCrossAccountRole",
+            #"arn:aws:iam::${var.staging_account_id}:role/terraform/TerraformCrossAccountRole",  ### To be commented during first run
+            # "arn:aws:iam::${var.dev_account_id}:root",
+            # "arn:aws:iam::${var.dev_account_id}:role/terraform/TerraformCrossAccountRole",  ### To be commented during first run
             # Allow prod service account direct access
-            "arn:aws:iam::${var.prod_account_id}:user/terraform/prod-terraform-service-account"
+            "arn:aws:iam::${var.prod_account_id}:user/terraform/prod-terraform-service-account",
           ]
         }
         Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:GetBucketLocation",
-          "s3:GetBucketVersioning",
-          "s3:GetObjectVersion",
-          "s3:ListBucketVersions"
+          "s3:*"
         ]
         Resource = [
           "arn:aws:s3:::${var.terraform_state_bucket_name}",
           "arn:aws:s3:::${var.terraform_state_bucket_name}/*"
         ]
-      },
-      {
-        Sid    = "TerraformStateLockTable"
-        Effect = "Allow"
-        Principal = {
-          AWS = [
-            "arn:aws:iam::${var.staging_account_id}:root",
-            "arn:aws:iam::${var.dev_account_id}:root",
-            "arn:aws:iam::${var.staging_account_id}:role/terraform/TerraformCrossAccountRole",
-            "arn:aws:iam::${var.dev_account_id}:role/terraform/TerraformCrossAccountRole",
-            "arn:aws:iam::${var.prod_account_id}:user/terraform/prod-terraform-service-account"
-          ]
-        }
-        Action = [
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:DescribeTable"
-        ]
-        Resource = [
-          "arn:aws:dynamodb:${var.region}:${var.prod_account_id}:table/${var.terraform_state_lock_table_name}"
-        ]
       }
     ]
   })
 }
 
-# Optional: Create additional cross-account IAM policies for more granular access
-resource "aws_iam_policy" "cross_account_s3_access" {
-  count = terraform.workspace == "prod" ? 1 : 0
 
-  name        = "CrossAccountS3Access"
-  path        = "/terraform/"
-  description = "Policy for cross-account S3 access to prod buckets"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:GetBucketLocation"
-        ]
-        Resource = [
-          for bucket_name in local.current_buckets : [
-            "arn:aws:s3:::${bucket_name}",
-            "arn:aws:s3:::${bucket_name}/*"
-          ]
-        ]
-      }
-    ]
-  })
-
-  tags = {
-    Environment = "prod"
-    Purpose     = "Cross-account S3 access"
-  }
-}
