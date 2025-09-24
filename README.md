@@ -71,3 +71,22 @@ unset AWS_PROFILE
 # Clear any cached credentials
 rm -rf ~/.aws/cli/cache/
 ```
+
+# Install fleeting plugin
+
+```bash
+gitlab-runner fleeting install
+
+For istolating based on environments, we need to run this
+
+sudo gitlab-runner register \
+  --non-interactive \
+  --url "https://gitlab.com/" \
+  --registration-token "XYZ123" \
+  --executor "docker" \
+  --description "dev-runner" \
+  --tag-list "dev" \
+  --run-untagged="false" \
+  --locked="true"
+
+```
