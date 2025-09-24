@@ -11,10 +11,10 @@ You need to initialize the backend separately for each workspace to store state 
 ```bash
 export AWS_ACCESS_KEY_ID=your-prod-account-admin-key
 export AWS_SECRET_ACCESS_KEY=your-prod-account-admin-secret
-
-terraform workspace select prod || terraform workspace new prod
-terraform init -backend-config="key=terraform/prod/terraform.tfstate"
-terraform apply
+.\terraform init -reconfigure -backend-config="key=terraform/prod/terraform.tfstate"
+.\terraform workspace select prod 
+.\terrform plan
+.\terraform apply
 ```
 
 # Step 2: STAGING account (creates staging role)
@@ -25,8 +25,9 @@ For Linux
 export AWS_ACCESS_KEY_ID=your-staging-account-admin-key
 export AWS_SECRET_ACCESS_KEY=your-staging-account-admin-secret
 
-.\terraform workspace select staging || terraform workspace new staging
-.\terraform init -backend-config="key=terraform/staging/terraform.tfstate"
+.\terraform init -reconfigure -backend-config="key=terraform/staging/terraform.tfstate"
+.\terraform workspace select prod 
+.\terrform plan
 .\terraform apply
 ```
 
@@ -35,9 +36,10 @@ export AWS_SECRET_ACCESS_KEY=your-staging-account-admin-secret
 export AWS_ACCESS_KEY_ID=your-dev-account-admin-key  
 export AWS_SECRET_ACCESS_KEY=your-dev-account-admin-secret
 
-terraform workspace select dev || terraform workspace new dev
-terraform init -backend-config="key=terraform/dev/terraform.tfstate"
-terraform apply
+.\terraform init -reconfigure -backend-config="key=terraform/dev/terraform.tfstate"
+.\terraform workspace select prod 
+.\terrform plan
+.\terraform apply
 ```
 
 
