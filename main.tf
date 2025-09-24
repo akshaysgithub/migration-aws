@@ -136,7 +136,7 @@ resource "aws_s3_bucket_policy" "terraform_state_backend_cross_account" {
             # Allow staging account full access to state bucket
             "arn:aws:iam::${var.staging_account_id}:root",
             #"arn:aws:iam::${var.staging_account_id}:role/terraform/TerraformCrossAccountRole",  ### To be commented during first run
-            # "arn:aws:iam::${var.dev_account_id}:root",
+             "arn:aws:iam::${var.dev_account_id}:root",
             # "arn:aws:iam::${var.dev_account_id}:role/terraform/TerraformCrossAccountRole",  ### To be commented during first run
             # Allow prod service account direct access
             "arn:aws:iam::${var.prod_account_id}:user/terraform/prod-terraform-service-account",
